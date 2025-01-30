@@ -9,6 +9,20 @@ class ScreenManager(private val context: Context) {
 
     private var wakeLock: PowerManager.WakeLock? = null
 
+//    fun wakeUpScreen() {
+//        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+//        val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+//
+//        // 🔥 Encender la pantalla si está apagada
+//        if (!powerManager.isInteractive) {
+//            wakeLock = powerManager.newWakeLock(
+//                PowerManager.PARTIAL_WAKE_LOCK,
+//                "WakeUpAndUnlock:WakeLock"
+//            )
+//            wakeLock?.acquire(10 * 1000L) // Mantener la pantalla encendida durante 10 segundos
+//        }
+//    }
+
     fun wakeUpScreen() {
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
@@ -16,12 +30,17 @@ class ScreenManager(private val context: Context) {
         // 🔥 Encender la pantalla si está apagada
         if (!powerManager.isInteractive) {
             wakeLock = powerManager.newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK,
+                PowerManager.FULL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.ON_AFTER_RELEASE,
                 "WakeUpAndUnlock:WakeLock"
             )
             wakeLock?.acquire(10 * 1000L) // Mantener la pantalla encendida durante 10 segundos
         }
+
+        // 🔥 Desbloquear la pantalla completamente
+        val keyguardLock = keyguardManager.newKeyguardLock("WakeUpAndUnlock:KeyguardLock")
+        keyguardLock.disableKeyguard()
     }
+
 
     fun lockScreen() {
         releaseWakeLock() // ✅ Llamar a releaseWakeLock para apagar la pantalla
