@@ -1,28 +1,61 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+    <!-- 🔥 Permiso para desbloquear el Keyguard (pantalla de bloqueo) -->
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <!-- 🔥 Permiso para mantener la pantalla encendida y despertar el dispositivo -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+    <!-- 🔥 Permiso para servicios en primer plano (Foreground Service) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+
+    <!-- 🔥 Permiso para mostrar ventanas sobre otras apps -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
 
+    <!-- 🔥 Permiso para recibir el evento de reinicio del dispositivo -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
-    <application>
+    <!-- 🔥 Permiso para usar notificaciones de pantalla completa -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.WakeUpAndUnlock">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
-            android:supportsPictureInPicture="true">
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.WakeUpAndUnlock">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
 
+        <!-- 🔥 Declaración del Servicio de Accesibilidad -->
+        <service
+            android:name=".AccessibilityServiceHandler"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService"/>
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config"/>
+        </service>
+
+        <!-- 🔥 Servicio en segundo plano para desbloquear el teléfono y abrir WhatsApp -->
         <service
             android:name=".ScreenUnlockService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse" />
+            android:foregroundServiceType="specialUse"
+            android:exported="false"/>
     </application>
 </manifest>

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">WakeUpAndUnlock</string>
+
+    <string name="accessibility_service_description">Servicio de accesibilidad para desbloqueo automático</string>
 </resources>
