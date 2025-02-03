@@ -40,22 +40,24 @@
 
         <!-- 🔥 Declaración del Servicio de Accesibilidad -->
         <service
-            android:name=".AccessibilityServiceHandler"
+            android:name=".MyAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService"/>
             </intent-filter>
-
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config"/>
         </service>
 
-        <!-- 🔥 Servicio en segundo plano para desbloquear el teléfono y abrir WhatsApp -->
-        <service
-            android:name=".ScreenUnlockService"
-            android:foregroundServiceType="specialUse"
-            android:exported="false"/>
+        <service android:name=".ScreenUnlockService" android:exported="false"/>
+
+        <activity android:name=".UnlockActivity"
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"/>
+
     </application>
 </manifest>

@@ -2,10 +2,7 @@ package com.gvs.wakeupandunlock
 
 import android.content.Intent
 import android.os.Bundle
-import android.provider.Settings
-import android.util.Log
 import android.view.WindowManager
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,28 +15,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.gvs.wakeupandunlock.ui.theme.WakeUpAndUnlockTheme
 
 class MainActivity : ComponentActivity() {
-    private lateinit var screenManager: ScreenManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val prefs = getSharedPreferences("config", MODE_PRIVATE)
-        val editor = prefs.edit()
-        editor.putString("device_pin", "1234") // 🔥 Reemplazar con el PIN real del usuario
-        editor.apply()
-
-
+        // 🔥 Mantener la pantalla encendida
         window.addFlags(
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                     WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
                     WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
         )
-
-        if (!Settings.canDrawOverlays(this)) {
-            Toast.makeText(this, "Activar permiso de superposición para mejor funcionamiento", Toast.LENGTH_LONG).show()
-        }
-
-        screenManager = ScreenManager(this)
 
         setContent {
             WakeUpAndUnlockTheme {
@@ -52,22 +37,8 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // 🔥 **AHORA SE INICIA EL SERVICIO AL ABRIR LA APP**
-        startForegroundService()
-    }
-
-    private fun startForegroundService() {
-        try {
-            val serviceIntent = Intent(this, ScreenUnlockService::class.java)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                startForegroundService(serviceIntent) // ✅ Para Android 8+ (API 26+)
-            } else {
-                startService(serviceIntent) // ✅ Para versiones anteriores
-            }
-            Log.d("MainActivity", "Foreground Service iniciado correctamente")
-        } catch (e: Exception) {
-            Log.e("MainActivity", "Error al iniciar el Foreground Service", e)
-        }
+        // 🔥 Iniciar el servicio de desbloqueo y cambio de apps
+        startService(Intent(this, ScreenUnlockService::class.java))
     }
 }
 
