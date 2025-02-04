@@ -1,22 +1,22 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- 🔥 Permiso para desbloquear el Keyguard (pantalla de bloqueo) -->
+    <!-- Permiso para desbloquear el Keyguard (pantalla de bloqueo) -->
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
 
-    <!-- 🔥 Permiso para mantener la pantalla encendida y despertar el dispositivo -->
+    <!-- Permiso para mantener la pantalla encendida y despertar el dispositivo -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
-    <!-- 🔥 Permiso para servicios en primer plano (Foreground Service) -->
+    <!-- Permiso para servicios en primer plano (Foreground Service) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
 
-    <!-- 🔥 Permiso para mostrar ventanas sobre otras apps -->
+    <!-- Permiso para mostrar ventanas sobre otras apps -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
 
-    <!-- 🔥 Permiso para recibir el evento de reinicio del dispositivo -->
+    <!-- Permiso para recibir el evento de reinicio del dispositivo -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
-    <!-- 🔥 Permiso para usar notificaciones de pantalla completa -->
+    <!-- Permiso para usar notificaciones de pantalla completa -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
 
     <application
@@ -31,14 +31,17 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:theme="@style/Theme.WakeUpAndUnlock">
+            android:theme="@style/Theme.WakeUpAndUnlock"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:excludeFromRecents="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
 
-        <!-- 🔥 Declaración del Servicio de Accesibilidad -->
+        <!--Servicio de Accesibilidad -->
         <service
             android:name=".MyAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
@@ -57,7 +60,17 @@
             android:launchMode="singleTask"
             android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"
             android:showWhenLocked="true"
-            android:turnScreenOn="true"/>
+            android:turnScreenOn="true"
+            android:excludeFromRecents="true"/>
+
+        <receiver android:name=".ScreenReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.SCREEN_OFF"/>
+                <action android:name="android.intent.action."/>
+            </intent-filter>
+        </receiver>
+
 
     </application>
 </manifest>

@@ -15,11 +15,13 @@ class UnlockActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // 🔥 Mostrar la pantalla encima del bloqueo
-        window.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-        )
+        setShowWhenLocked(true)
+        setTurnScreenOn(true)
+//        window.addFlags(
+//            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+//                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+//                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+//        )
 
         // 🔥 Esperar 1 segundo y abrir WhatsApp
         Handler(Looper.getMainLooper()).postDelayed({

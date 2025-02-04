@@ -14,16 +14,14 @@ class ScreenManager(private val context: Context) {
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
 
-        // 🔥 1️⃣ Encender la pantalla si está apagada
         if (!powerManager.isInteractive) {
             wakeLock = powerManager.newWakeLock(
                 PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
                 "WakeUpAndUnlock:WakeLock"
             )
-            wakeLock?.acquire(10 * 1000L) // Mantener pantalla encendida por 10 segundos
+            wakeLock?.acquire(20 * 1000L) // Mantener pantalla encendida por 20 segundos
         }
 
-        // 🔥 2️⃣ Desbloquear pantalla si está bloqueada
         if (keyguardManager.isKeyguardLocked) {
             keyguardLock = keyguardManager.newKeyguardLock("WakeUpAndUnlock:KeyguardLock")
             keyguardLock?.disableKeyguard()

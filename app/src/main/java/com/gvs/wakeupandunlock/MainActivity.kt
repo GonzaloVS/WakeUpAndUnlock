@@ -19,12 +19,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 🔥 Mantener la pantalla encendida
-        window.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-        )
+        // Mantener la pantalla encendida
+        setShowWhenLocked(true)
+        setTurnScreenOn(true)
+//        window.addFlags(
+//            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+//                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+//                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+//        )
 
         setContent {
             WakeUpAndUnlockTheme {
@@ -37,7 +39,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // 🔥 Iniciar el servicio de desbloqueo y cambio de apps
+        // Iniciar el servicio de desbloqueo y cambio de apps
         startService(Intent(this, ScreenUnlockService::class.java))
     }
 }
