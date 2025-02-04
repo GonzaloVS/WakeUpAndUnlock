@@ -3,8 +3,6 @@ package com.gvs.wakeupandunlock
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
-import android.content.SharedPreferences
-import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -13,7 +11,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 
 class MyAccessibilityService : AccessibilityService() {
 
-    private var isUnlocking = false // 🔥 Evita loops infinitos
+    private var isUnlocking = false // Evita loops infinitos
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -28,7 +26,8 @@ class MyAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event?.packageName == "com.android.systemui") { // 📌 **Pantalla de bloqueo detectada**
+        if (event?.packageName == "com.android.systemui" || event?.packageName == "com.android.keyguard") {
+            // **Pantalla de bloqueo detectada**
             if (!isUnlocking) {
                 isUnlocking = true
                 Log.d("AccessibilityService", "Pantalla de bloqueo detectada, intentando desbloquear...")
@@ -40,27 +39,37 @@ class MyAccessibilityService : AccessibilityService() {
     private fun desbloquearPantalla() {
         val rootNode = rootInActiveWindow ?: return
 
-        val pin = obtenerPinUsuario() // 📌 **Recuperamos el PIN guardado en la app**
-        if (pin.isEmpty()) {
-            Log.e("AccessibilityService", "No hay PIN configurado en la app")
+        // **Paso 1: Verificar si hay un slider para desbloquear**
+        val deslizarNodo = buscarNodoPorTexto(rootNode, "Deslizar para desbloquear")
+        if (deslizarNodo != null) {
+            deslizarNodo.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            Log.d("AccessibilityService", "Deslizando para desbloquear...")
+            Handler(Looper.getMainLooper()).postDelayed({ desbloquearPantalla() }, 1000) // Esperar y reintentar
             return
         }
 
-        // 🔥 **Introduce el PIN número por número**
+        // **Paso 2: Ingresar el PIN**
+        val pin = "1234" // 📌 **Configura el PIN**
         for (digit in pin) {
             val button = buscarNodoPorTexto(rootNode, digit.toString())
-            button?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            if (button != null) {
+                button.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                Log.d("AccessibilityService", "Ingresando número: $digit")
+                Thread.sleep(500) // Espera breve entre cada número
+            }
         }
 
-        // 📌 **Pulsa "OK" o "Enter" para confirmar**
+        // **Paso 3: Confirmar con "OK" o "Enter"**
         val enterButton = buscarNodoPorTexto(rootNode, "OK") ?: buscarNodoPorTexto(rootNode, "Enter")
-        enterButton?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+        if (enterButton != null) {
+            enterButton.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            Log.d("AccessibilityService", "PIN ingresado, desbloqueando...")
+        }
 
-        // 🔥 **Espera un momento y vuelve a lanzar WhatsApp**
+        // **Paso 4: Abrir WhatsApp**
         Handler(Looper.getMainLooper()).postDelayed({
             abrirWhatsApp()
-            isUnlocking = false
-        }, 2000) // ✅ Espera 2 segundos tras desbloquear
+        }, 2000) // Espera 2 segundos tras desbloquear
     }
 
     private fun buscarNodoPorTexto(rootNode: AccessibilityNodeInfo, texto: String): AccessibilityNodeInfo? {
@@ -68,19 +77,17 @@ class MyAccessibilityService : AccessibilityService() {
         return nodes.firstOrNull()
     }
 
-    private fun obtenerPinUsuario(): String {
-        val prefs: SharedPreferences = getSharedPreferences("config", MODE_PRIVATE)
-        return prefs.getString("device_pin", "") ?: ""
-    }
-
     private fun abrirWhatsApp() {
         Log.d("AccessibilityService", "Reintentando abrir WhatsApp...")
 
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            data = Uri.parse("whatsapp://send?phone=+34638397366&text=" + Uri.encode("Hola, esto es una prueba."))
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+        val intent = packageManager.getLaunchIntentForPackage("com.whatsapp")
+        if (intent != null) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            Log.d("AccessibilityService", "WhatsApp abierto exitosamente")
+        } else {
+            Log.e("AccessibilityService", "WhatsApp no está instalado")
         }
-        startActivity(intent)
     }
 
     override fun onInterrupt() {

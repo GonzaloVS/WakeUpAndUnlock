@@ -5,7 +5,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.WindowManager
 import android.util.Log
 import androidx.activity.ComponentActivity
 
@@ -14,16 +13,16 @@ class UnlockActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 🔥 Mostrar la pantalla encima del bloqueo
-        setShowWhenLocked(true)
+        // Mostrar la pantalla encima del bloqueo
         setTurnScreenOn(true)
+        setShowWhenLocked(true)
 //        window.addFlags(
 //            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
 //                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
 //                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
 //        )
 
-        // 🔥 Esperar 1 segundo y abrir WhatsApp
+        // Esperar 1 segundo y abrir WhatsApp
         Handler(Looper.getMainLooper()).postDelayed({
             openWhatsApp()
         }, 1000)
@@ -42,7 +41,7 @@ class UnlockActivity : ComponentActivity() {
             startActivity(intent)
             Log.d("UnlockActivity", "WhatsApp abierto con mensaje de prueba")
 
-            finish() // 🔥 Cerrar UnlockActivity después de abrir WhatsApp
+            finish() // Cerrar UnlockActivity después de abrir WhatsApp
         } catch (e: Exception) {
             Log.e("UnlockActivity", "Error al abrir WhatsApp", e)
         }
