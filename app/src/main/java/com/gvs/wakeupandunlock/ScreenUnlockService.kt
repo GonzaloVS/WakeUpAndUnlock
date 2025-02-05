@@ -1,81 +1,46 @@
 package com.gvs.wakeupandunlock
 
-import android.app.Service
-import android.content.*
+import android.app.*
+import android.content.Context
+import android.content.Intent
 import android.os.*
 import android.util.Log
+import androidx.core.app.NotificationCompat
 
 class ScreenUnlockService : Service() {
 
-    private lateinit var screenManager: ScreenManager
-    private val handler = Handler(Looper.getMainLooper())
-    private lateinit var screenReceiver: ScreenReceiver
-
     override fun onCreate() {
         super.onCreate()
-        screenManager = ScreenManager(this)
-
-        // Registrar BroadcastReceiver para detectar bloqueo de pantalla
-        screenReceiver = ScreenReceiver()
-        val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
-        registerReceiver(screenReceiver, filter)
+        Log.d("ScreenUnlockService", "Servicio iniciado")
+        startForegroundService()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startProcessLoop()
+        // Aquí puedes ejecutar la lógica para desbloquear la pantalla
         return START_STICKY
     }
 
-    private fun startProcessLoop() {
-        handler.postDelayed({
-            Log.d("ScreenUnlockService", "Ejecutando ciclo de cambio de apps")
+    private fun startForegroundService() {
+        val notificationChannelId = "unlock_service_channel"
 
-            // Desbloquear la pantalla y encenderla
-            screenManager.wakeUpAndUnlockScreen()
-
-            // Traer MainActivity al frente
-            bringMainActivityToFront()
-
-            // Esperar 2 segundos y abrir UnlockActivity
-            handler.postDelayed({
-                openUnlockActivity()
-            }, 2000)
-
-            // Esperar 3 segundos después de WhatsApp y volver a nuestra app
-            handler.postDelayed({
-                returnToMainActivity()
-            }, 8000)
-
-            // Repetir el ciclo cada 10 segundos
-            startProcessLoop()
-
-        }, 10000)
-    }
-
-    private fun bringMainActivityToFront() {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+        // Crear el canal de notificación si es Android 8+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                notificationChannelId,
+                "Desbloqueo de pantalla",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
         }
-        startActivity(intent)
-    }
 
-    private fun openUnlockActivity() {
-        val intent = Intent(this, UnlockActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        }
-        startActivity(intent)
-    }
+        val notification = NotificationCompat.Builder(this, notificationChannelId)
+            .setContentTitle("Desbloqueo de pantalla activo")
+            .setContentText("La app está funcionando en segundo plano")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .build()
 
-    private fun returnToMainActivity() {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-        }
-        startActivity(intent)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        unregisterReceiver(screenReceiver)
+        startForeground(1, notification)
     }
 
     override fun onBind(intent: Intent?): IBinder? {

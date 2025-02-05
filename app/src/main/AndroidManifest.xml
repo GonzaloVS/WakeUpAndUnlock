@@ -3,7 +3,7 @@
     <!-- Permiso para desbloquear el Keyguard (pantalla de bloqueo) -->
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
 
-    <!-- Permiso para mantener la pantalla encendida y despertar el dispositivo -->
+    <!-- Permiso para encender y mantener la pantalla encendida -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
     <!-- Permiso para servicios en primer plano (Foreground Service) -->
@@ -34,7 +34,8 @@
             android:theme="@style/Theme.WakeUpAndUnlock"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
-            android:excludeFromRecents="true">
+            android:excludeFromRecents="true"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -54,23 +55,12 @@
                 android:resource="@xml/accessibility_service_config"/>
         </service>
 
-        <service android:name=".ScreenUnlockService" android:exported="false"/>
-
         <activity android:name=".UnlockActivity"
             android:launchMode="singleTask"
             android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
             android:excludeFromRecents="true"/>
-
-        <receiver android:name=".ScreenReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.SCREEN_OFF"/>
-                <action android:name="android.intent.action."/>
-            </intent-filter>
-        </receiver>
-
 
     </application>
 </manifest>
