@@ -56,14 +56,14 @@ class MainActivity : ComponentActivity() {
         }
 
         // Verificar y solicitar servicio de accesibilidad
-        //startAccessibilityUnlockProcess()
+        startAccessibilityUnlockProcess()
     }
 
-//    override fun onResume() {
-//        super.onResume()
-//        Log.d("MainActivity", "Volviendo a la app desde ajustes de accesibilidad")
-//        //startAccessibilityUnlockProcess() // Reintentar si el usuario ya activó el servicio
-//    }
+    override fun onResume() {
+        super.onResume()
+        Log.d("MainActivity", "Volviendo a la app desde ajustes de accesibilidad")
+        startAccessibilityUnlockProcess() // Reintentar si el usuario ya activó el servicio
+    }
 
     private fun wakeUpScreen() {
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager

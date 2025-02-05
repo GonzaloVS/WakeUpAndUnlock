@@ -11,7 +11,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
-import androidx.appcompat.app.AlertDialog
+//import androidx.appcompat.app.AlertDialog
 
 class UnlockActivity : ComponentActivity() {
 
@@ -21,19 +21,19 @@ class UnlockActivity : ComponentActivity() {
         Log.d("UnlockActivity", "UnlockActivity creado")
 
         // Encender pantalla y descartar el lock screen
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(true)
-            setTurnScreenOn(true)
-            val keyguardManager = getSystemService(KEYGUARD_SERVICE) as android.app.KeyguardManager
-            keyguardManager.requestDismissKeyguard(this, null)
-        } else {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+//            setShowWhenLocked(true)
+//            setTurnScreenOn(true)
+//            val keyguardManager = getSystemService(KEYGUARD_SERVICE) as android.app.KeyguardManager
+//            keyguardManager.requestDismissKeyguard(this, null)
+//        } else {
             window.addFlags(
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                         WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
                         WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
                         WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
             )
-        }
+        //}
 
         // Esperar un segundo y luego abrir WhatsApp
         Handler(Looper.getMainLooper()).postDelayed({
