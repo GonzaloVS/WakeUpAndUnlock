@@ -1,7 +1,6 @@
 package com.gvs.wakeupandunlock
 
 import android.app.*
-import android.content.Context
 import android.content.Intent
 import android.os.*
 import android.util.Log

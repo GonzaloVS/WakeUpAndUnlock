@@ -5,7 +5,6 @@ import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
