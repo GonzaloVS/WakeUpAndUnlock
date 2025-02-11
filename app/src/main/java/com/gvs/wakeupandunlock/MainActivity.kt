@@ -1,140 +1,115 @@
 package com.gvs.wakeupandunlock
 
-import android.accessibilityservice.AccessibilityService
+import android.app.Activity
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
-
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
-import android.provider.Settings
-import android.text.TextUtils
-import android.util.Log
 import android.view.WindowManager
-import android.view.accessibility.AccessibilityManager
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.gvs.wakeupandunlock.ui.theme.WakeUpAndUnlockTheme
+import android.widget.TextView
 
-class MainActivity : ComponentActivity() {
-
-    private lateinit var keyguardManager: KeyguardManager
-    private var keyguardLock: KeyguardManager.KeyguardLock? = null
+class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        wakeUpScreen()
-        // Para versiones antiguas, se usan flags en la ventana
-        window.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+        // Mostrar "Hola Mundo" en pantalla
+        val textView = TextView(this).apply {
+            text = "Hola Mundo"
+            textSize = 24f
+        }
+        setContentView(textView)
+
+        // 🔹 Configurar la ventana para ignorar el bloqueo de pantalla si es de tipo "deslizar"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+        } else {
+            window.addFlags(
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+            )
+        }
+
+        // 🔹 Intentar desbloquear
+        wakeUpAndUnlockScreen()
+
+        // 🔹 Abrir WhatsApp en pantalla dividida
+        launchWhatsAppSplitScreen()
+    }
+
+    // 🔹 Método para encender la pantalla y desbloquear
+    private fun wakeUpAndUnlockScreen() {
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        val wakeLock = powerManager.newWakeLock(
+            PowerManager.FULL_WAKE_LOCK or
+                    PowerManager.ACQUIRE_CAUSES_WAKEUP or
+                    PowerManager.ON_AFTER_RELEASE,
+            "MyApp::WakeLock"
         )
+        wakeLock.acquire(3000)
+        wakeLock.release()
 
-        disableKeyguard()
+        // 🔹 Si hay un bloqueo fuerte (PIN, patrón, huella), pedir al usuario que lo desbloquee
+        val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+        if (keyguardManager.isKeyguardLocked) {
+            val intent = keyguardManager.createConfirmDeviceCredentialIntent(
+                "Desbloqueo requerido",
+                "Para continuar, desbloquea tu dispositivo."
+            )
+            if (intent != null) {
+                startActivity(intent)
+            }
+        }
+    }
 
-        setContent {
-            WakeUpAndUnlockTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+    // 🔹 Método para abrir WhatsApp en pantalla dividida
+    private fun launchWhatsAppSplitScreen() {
+        val phoneNumber = "+34638397366"
+        val message = "test"
+
+        val whatsappIntent = Intent(Intent.ACTION_VIEW).apply {
+            data = Uri.parse("whatsapp://send?phone=$phoneNumber&text=${Uri.encode(message)}")
+            setPackage("com.whatsapp")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) // Se remueve FLAG_ACTIVITY_MULTIPLE_TASK para evitar instancias repetidas
+        }
+
+        val thisAppIntent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT)
+        }
+
+        try {
+            startActivity(whatsappIntent)
+            Handler(Looper.getMainLooper()).postDelayed({
+                // ⚠ Verificar que la app NO esté ya en foreground antes de lanzarla
+                if (!isAppInForeground(this)) {
+                    startActivity(thisAppIntent)
+                }
+            }, 1000) // Esperar 1 segundo en lugar de 500ms para evitar conflictos
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // 🔹 Método para verificar si la app ya está en primer plano
+    private fun isAppInForeground(context: Context): Boolean {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+        val runningProcesses = activityManager.runningAppProcesses
+        if (runningProcesses != null) {
+            for (processInfo in runningProcesses) {
+                if (processInfo.processName == context.packageName &&
+                    processInfo.importance == android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
                 ) {
-                    Greeting("Android")
+                    return true
                 }
             }
         }
-
-        // Verificar y solicitar servicio de accesibilidad
-        startAccessibilityUnlockProcess()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        Log.d("MainActivity", "Volviendo a la app desde ajustes de accesibilidad")
-        startAccessibilityUnlockProcess() // Reintentar si el usuario ya activó el servicio
-    }
-
-    private fun wakeUpScreen() {
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        val wakeLock = powerManager.newWakeLock(
-            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
-            "WakeUpAndUnlock:WakeLock"
-        )
-        wakeLock.acquire(3000) // Mantiene la pantalla encendida 3 segundos
-        wakeLock.release()
-    }
-
-    private fun disableKeyguard() {
-        keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-        if (keyguardManager.isKeyguardLocked) {
-            keyguardLock = keyguardManager.newKeyguardLock("WakeUpAndUnlock:KeyguardLock")
-            keyguardLock?.disableKeyguard()
-        }
-    }
-
-    private fun startAccessibilityUnlockProcess() {
-        if (!isAccessibilityServiceEnabled(this, MyAccessibilityService::class.java)) {
-            Log.e("MainActivity", "El servicio de accesibilidad no está habilitado. Pidiendo activación.")
-
-            // Abrir la configuración de accesibilidad
-            val settingsIntent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-            settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            startActivity(settingsIntent)
-
-            // Reintentar en 3 segundos
-            Handler(Looper.getMainLooper()).postDelayed({ startAccessibilityUnlockProcess() }, 3000)
-        } else {
-            Log.d("MainActivity", "El servicio de accesibilidad ya está activado. Iniciando UnlockActivity...")
-            val unlockIntent = Intent(this, UnlockActivity::class.java)
-            unlockIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(unlockIntent)
-        }
-    }
-
-
-    private fun isAccessibilityServiceEnabled(
-        context: Context,
-        service: Class<out AccessibilityService>
-    ): Boolean {
-        val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-        val enabledServices = Settings.Secure.getString(
-            context.contentResolver,
-            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        ) ?: return false
-
-        val colonSplitter = TextUtils.SimpleStringSplitter(':')
-        colonSplitter.setString(enabledServices)
-        while (colonSplitter.hasNext()) {
-            val componentName = colonSplitter.next()
-            if (componentName.equals("${context.packageName}/${service.name}", ignoreCase = true)) {
-                return true
-            }
-        }
         return false
-    }
-
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(text = "Hello $name!", modifier = modifier)
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    WakeUpAndUnlockTheme {
-        Greeting("Android")
     }
 }
